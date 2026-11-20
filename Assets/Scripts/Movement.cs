@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 /////////////// INFORMATION ///////////////
@@ -18,37 +19,51 @@ public class LimitedPlatformerMovement : MonoBehaviour
 {
     [SerializeField] private float maxSpeed = 10f;
     [SerializeField] private float jumpForce = 10f;
+    
     private Vector2 moveInput;
+    
     private bool jumpInput;
+    
     private Rigidbody2D rigidBody;
     private CapsuleCollider2D groundCheckCollider;
+    private Animator animator;
     void Awake()
     {
         rigidBody = GetComponent<Rigidbody2D>();
         groundCheckCollider = GetComponent<CapsuleCollider2D>();
+        animator = GetComponent<Animator>();
     }
     void Update()
     {
 // Apply horizontal velocity from input
-        rigidBody.linearVelocityX = moveInput.x * maxSpeed;
+        if (moveInput.x != 0) rigidBody.linearVelocityX = moveInput.x * maxSpeed;
 // Apply vertical velocity from jump
+        if (!IsGrounded()) animator.SetBool("grounded", false);
+        else animator.SetBool("grounded", true);
+        
+        if (rigidBody.linearVelocityX > 0.2 || rigidBody.linearVelocityX < -0.2) animator.SetBool("isRunning", true);
+        else animator.SetBool("isRunning", false);
+
         if (jumpInput && IsGrounded())
         {
             rigidBody.linearVelocityY = jumpForce;
         }
         jumpInput = false; // only jump once for each press of the jump-button
     }
+
+    private void OnCollisionEnter2D(Collision2D other)
+    {
+        if (!other.gameObject.CompareTag("Slippery"))
+        {
+            rigidBody.linearVelocityX *= 0.95f;
+        }
+    }
+
     private bool IsGrounded()
     {
 // Is our groundCheckCollider touching the groundLayer? If so, return the value "true"
-        if (groundCheckCollider.IsTouchingLayers(~0)) // ~0 is referring to EVERY layer.
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        if (groundCheckCollider.IsTouchingLayers(~0)) return true; // ~0 is referring to EVERY layer.
+        else return false;
     }
     public void OnMove(InputValue input)
     {
