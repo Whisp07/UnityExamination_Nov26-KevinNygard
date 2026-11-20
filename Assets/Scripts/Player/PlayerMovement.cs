@@ -27,11 +27,13 @@ public class LimitedPlatformerMovement : MonoBehaviour
     private Rigidbody2D rigidBody;
     private CapsuleCollider2D groundCheckCollider;
     private Animator animator;
+    private SpriteRenderer spriteRenderer;
     void Awake()
     {
         rigidBody = GetComponent<Rigidbody2D>();
         groundCheckCollider = GetComponent<CapsuleCollider2D>();
         animator = GetComponent<Animator>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
     }
     void Update()
     {
@@ -43,6 +45,9 @@ public class LimitedPlatformerMovement : MonoBehaviour
         
         if (rigidBody.linearVelocityX > 0.2 || rigidBody.linearVelocityX < -0.2) animator.SetBool("isRunning", true);
         else animator.SetBool("isRunning", false);
+
+        if (rigidBody.linearVelocityX > 0) spriteRenderer.flipX = false;
+        else if (rigidBody.linearVelocityX < 0) spriteRenderer.flipX = true;
 
         if (jumpInput && IsGrounded())
         {
@@ -57,6 +62,8 @@ public class LimitedPlatformerMovement : MonoBehaviour
         {
             rigidBody.linearVelocityX *= 0.95f;
         }
+        
+        if (other.gameObject.CompareTag("Enemy")) rigidBody.angularVelocity += 10;
     }
 
     private bool IsGrounded()
